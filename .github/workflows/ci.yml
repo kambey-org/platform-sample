@@ -13,7 +13,7 @@ jobs:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
-      - run: packer validate -syntax-only packer/
+      - run: packer validate -syntax-only .
         working-directory: packer
   packer-deploy:
     needs: packer-validate
@@ -28,21 +28,38 @@ jobs:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
-      - run: tofu validate
-        working-directory: terraform
+
   tofu-plan:                   
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
+      - run: tofu init
+        working-directory: terraform
+      - run: tofu fmt -check
+        working-directory: terraform
+      - run: tofu validate
+        working-directory: terraform
       - run: tofu plan
         working-directory: terraform
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: terraform/tfplan
+          retention-days: 1
+
   tofu-deploy:
     needs: tofu-plan
     runs-on: self-hosted
     environment: dev
     steps:
       - uses: actions/checkout@v4
-      - run: tofu apply -auto-approve
+      - run: tofu init
+        working-directory: terraform
+      - uses: actions/download-artifact@v4
+        with:
+          name: tfplan
+          path: terraform
+      - run: tofu apply tfplan -auto-approve
         working-directory: terraform
 
   ansible-validate:                

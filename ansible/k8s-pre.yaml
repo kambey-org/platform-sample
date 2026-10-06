@@ -1,5 +1,5 @@
 ---
-- hosts: master:workers
+- hosts: all
   become: yes
   tasks:
 
@@ -11,8 +11,56 @@
           - curl
           - gpg
           - libseccomp2
+          - ssh
         state: present
         update_cache: true
+
+    - name: Create ssh.service drop-in directory
+      ansible.builtin.file:
+        path: /etc/systemd/system/ssh.service.d
+        state: directory
+        mode: '0755'
+
+    - name: Drop-in to generate SSH host keys at boot
+      ansible.builtin.copy:
+        dest: /etc/systemd/system/ssh.service.d/hostkeys.conf
+        content: |
+          [Service]
+          ExecStartPre=
+          ExecStartPre=/usr/bin/ssh-keygen -A
+          ExecStartPre=/usr/sbin/sshd -t
+      notify: Reload systemd
+
+
+    - name: Authorize SSH key for ansible user
+      ansible.posix.authorized_key:
+        user: ansible
+        state: present
+        key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
+
+    - name: Passwordless sudo for ansible
+      ansible.builtin.copy:
+        dest: /etc/sudoers.d/ansible
+        content: "ansible ALL=(ALL) NOPASSWD:ALL\n"
+        mode: '0440'
+        validate: 'visudo -cf %s'
+      
+    - name: Install QEMU Guest Agent
+      ansible.builtin.apt:
+        name: qemu-guest-agent
+        state: present
+
+    - name: Enable QEMU Guest Agent
+      ansible.builtin.systemd:
+        name: qemu-guest-agent
+        enabled: true
+        
+    - name: Enable and start serial-getty
+      systemd:
+        name: serial-getty@ttyS0.service
+        enabled: true
+        state: started
+        daemon_reload: true
 
     - name: Create keyrings directory
       become: true
@@ -78,7 +126,7 @@
     - name: Download containerd package
       become: true
       ansible.builtin.get_url:
-        url: "https://download.docker.com/linux/debian/dists/trixie/pool/stable/amd64/containerd.io_2.3.5-1~debian.13~trixie_amd64.deb"
+        url: "https://download.docker.com/linux/debian/dists/bookworm/pool/stable/amd64/containerd.io_2.3.5-1~debian.12~bookworm_amd64.deb"
         dest: "/tmp/containerd.deb"
         mode: '0644'
 
@@ -100,7 +148,6 @@
         state: started
         daemon_reload: true
 
-
     - name: Install kubeadm, kubelet, and kubectl
       apt:
         name: "{{ item }}"
@@ -109,53 +156,46 @@
         - kubeadm
         - kubelet
         - kubectl
+
+    - name: Add serial console to GRUB
+      ansible.builtin.replace:
+        path: /etc/default/grub
+        regexp: '^GRUB_CMDLINE_LINUX="(?!.*ttyS0)([^"]*)"$'
+        replace: 'GRUB_CMDLINE_LINUX="\1 console=tty0 console=ttyS0,115200n8"'
+      notify: Update GRUB
+
+    - name: Flush handlers
+      ansible.builtin.meta: flush_handlers
+
+    - name: Remove SSH host keys (generated per VM at boot)
+      ansible.builtin.shell: rm -f /etc/ssh/ssh_host_*
+      changed_when: true
+
+    - name: Reset machine-id (regenerated on first boot)
+      ansible.builtin.shell: truncate -s 0 /etc/machine-id
+      changed_when: true
+
+    - name: Clean apt cache
+      ansible.builtin.apt:
+        autoclean: true
+        autoremove: true
+
+    - name: Ensure current hostname resolves
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        regexp: '^127\.0\.1\.1'
+        line: "127.0.1.1 {{ ansible_hostname }}"
+
   handlers:
+    - name: Update GRUB
+      ansible.builtin.command: update-grub
+
+    - name: Reload systemd
+      ansible.builtin.systemd: 
+        daemon_reload: true
+
     - name: Restart containerd
       systemd:
         name: containerd
         state: restarted
         enabled: true
-- hosts: master
-  become: yes
-  tasks:
-    - name: Initialize Kubernetes master
-      command: kubeadm init --pod-network-cidr=10.48.0.0/16
-      register: kubeadm_output
-      ignore_errors: yes
-
-    - name: Create kubeconfig directory
-      ansible.builtin.file:
-        path: "{{ ansible_env.HOME }}/.kube"
-        state: directory
-        owner: "{{ ansible_user_uid }}"
-        group: "{{ ansible_user_gid }}"
-        mode: "0700"
-
-    - name: Copy admin kubeconfig
-      ansible.builtin.copy:
-        src: /etc/kubernetes/admin.conf
-        dest: "{{ ansible_env.HOME }}/.kube/config"
-        remote_src: true
-        owner: "{{ ansible_user_uid }}"
-        group: "{{ ansible_user_gid }}"
-        mode: "0600"
-
-    - name: Install Calico network plugin
-      command: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
-
-    - name: Create kubeadm join command
-      ansible.builtin.command:
-        cmd: kubeadm token create --print-join-command
-      register: kubeadm_join
-      changed_when: false
-
-    - name: Save join command
-      ansible.builtin.set_fact:
-        kubeadm_join_command: "{{ kubeadm_join.stdout }}"
-
-- hosts: workers
-  become: yes
-  tasks:
-    - name: Join worker to Kubernetes
-      ansible.builtin.command:
-        cmd: "{{ hostvars[groups['master'][0]]['kubeadm_join_command'] }}"

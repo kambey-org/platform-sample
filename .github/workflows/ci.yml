@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+  workflow_dispatch:
+
+jobs:
+  packer-validate:                     
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - run: packer validate -syntax-only packer/
+        working-directory: packer
+  packer-deploy:
+    needs: packer-validate
+    runs-on: self-hosted
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+      - run: packer build .
+        working-directory: packer
+
+  tofu-validate:                  
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - run: tofu validate
+        working-directory: terraform
+  tofu-plan:                   
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - run: tofu plan
+        working-directory: terraform
+  tofu-deploy:
+    needs: tofu-plan
+    runs-on: self-hosted
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+      - run: tofu apply -auto-approve
+        working-directory: terraform
+
+  ansible-validate:                
+    runs-on: self-hosted
+    steps:
+      - uses: actions/checkout@v4
+      - run: ansible-lint
+        working-directory: ansible
+      - run: ansible-playbook --syntax-check k8s-pre.yaml
+        working-directory: ansible
+      - run: ansible-playbook --syntax-check k8s-post.yaml
+        working-directory: ansible
+  ansible-deploy:
+    needs: ansible-validate
+    runs-on: self-hosted
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+      - run: ansible-playbook -i inventory.yml k8s-post.yaml
+        working-directory: ansible

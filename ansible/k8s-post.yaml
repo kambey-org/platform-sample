@@ -1,7 +1,7 @@
 ---
 - name: Kubernetes Post-Installation
   hosts: all
-  become: yes
+  become: true
   tasks:
     - name: Map old and new hostname to 127.0.1.1
       ansible.builtin.lineinfile:
@@ -21,12 +21,12 @@
 
 - name: Kubernetes worker Post-Installation
   hosts: master
-  become: yes
+  become: true
   tasks:
     - name: Initialize Kubernetes master
       command: kubeadm init --pod-network-cidr=10.48.0.0/16
       register: kubeadm_output
-      ignore_errors: yes
+      ignore_errors: true
 
     - name: Create kubeconfig directory
       ansible.builtin.file:
@@ -60,7 +60,7 @@
 
 - name: Kubernetes worker Post-Installation
   hosts: workers
-  become: yes
+  become: true
   tasks:
     - name: Join worker to Kubernetes
       ansible.builtin.command:

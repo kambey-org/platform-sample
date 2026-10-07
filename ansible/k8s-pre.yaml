@@ -1,7 +1,7 @@
 ---
 - name: Kubernetes Pre-Installation
   hosts: all
-  become: yes
+  become: true
   tasks:
 
     - name: Install prerequisites

@@ -8,7 +8,7 @@ terraform {
       source  = "dmacvicar/libvirt"
       version = "~> 0.9.9"
     }
-     dns = { source = "hashicorp/dns" }
+    dns = { source = "hashicorp/dns" }
   }
 }
 

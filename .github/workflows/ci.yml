@@ -10,7 +10,7 @@ on:
 
 jobs:
   packer-validate:                     
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: packer validate -syntax-only .
@@ -19,15 +19,11 @@ jobs:
     needs: packer-validate
     runs-on: self-hosted
     environment: dev
+    if: github.event_name  == 'dev' 
     steps:
       - uses: actions/checkout@v4
       - run: packer build .
         working-directory: packer
-
-  tofu-validate:                  
-    runs-on: self-hosted
-    steps:
-      - uses: actions/checkout@v4
 
   tofu-plan:                   
     runs-on: self-hosted
@@ -51,6 +47,7 @@ jobs:
     needs: tofu-plan
     runs-on: self-hosted
     environment: dev
+    if: github.event_name  == 'dev' 
     steps:
       - uses: actions/checkout@v4
       - run: tofu init
@@ -63,10 +60,12 @@ jobs:
         working-directory: terraform
 
   ansible-validate:                
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
+    container:
+      image: pipelinecomponents/ansible-lint:latest
     steps:
       - uses: actions/checkout@v4
-      - run: ansible-lint
+      - run: ansible-lint -f pep8
         working-directory: ansible
       - run: ansible-playbook --syntax-check k8s-pre.yaml
         working-directory: ansible
@@ -76,6 +75,7 @@ jobs:
     needs: ansible-validate
     runs-on: self-hosted
     environment: dev
+    if: github.event_name  == 'dev' 
     steps:
       - uses: actions/checkout@v4
       - run: ansible-playbook -i inventory.yml k8s-post.yaml

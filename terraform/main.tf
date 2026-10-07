@@ -14,11 +14,11 @@ resource "libvirt_volume" "node_disk" {
 
   target = {
     format = { type = "qcow2" }
-      permissions = {
-        mode  = "0644"
-        owner = "64055"   
-        group = "991"    
-      }
+    permissions = {
+      mode  = "0644"
+      owner = "64055"
+      group = "991"
+    }
   }
 
   backing_store = {
@@ -27,8 +27,8 @@ resource "libvirt_volume" "node_disk" {
   }
 }
 resource "libvirt_volume" "base_image" {
-  name   = "debian-base-k8s.qcow2"
-  pool   = libvirt_pool.k8s_pool.name
+  name = "debian-base-k8s.qcow2"
+  pool = libvirt_pool.k8s_pool.name
   target = {
     format = { type = "qcow2" }
     permissions = {
@@ -80,7 +80,7 @@ resource "libvirt_network" "k8s_net" {
   ]
 }
 resource "libvirt_domain" "node" {
-  for_each = var.nodes
+  for_each    = var.nodes
   name        = each.key
   type        = "kvm"
   memory      = each.value.memory
@@ -119,14 +119,14 @@ resource "libvirt_domain" "node" {
       {
         source = {
           volume = {
-            volume = libvirt_volume.node_disk[each.key].name 
+            volume = libvirt_volume.node_disk[each.key].name
             pool   = libvirt_pool.k8s_pool.name
           }
         }
         driver = {
           name = "qemu"
           type = "qcow2"
-        } 
+        }
         target = {
           dev = "vda"
           bus = "virtio"

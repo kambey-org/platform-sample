@@ -19,7 +19,7 @@ jobs:
     needs: packer-validate
     runs-on: self-hosted
     environment: dev
-    if: github.event_name  == 'dev' 
+    if: github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v4
       - run: packer build .
@@ -47,7 +47,7 @@ jobs:
     needs: tofu-plan
     runs-on: self-hosted
     environment: dev
-    if: github.event_name  == 'dev' 
+    if: github.ref == 'refs/heads/master' 
     steps:
       - uses: actions/checkout@v4
       - run: tofu init
@@ -75,7 +75,7 @@ jobs:
     needs: ansible-validate
     runs-on: self-hosted
     environment: dev
-    if: github.event_name  == 'dev' 
+    if: github.ref == 'refs/heads/master' 
     steps:
       - uses: actions/checkout@v4
       - run: ansible-playbook -i inventory.yml k8s-post.yaml

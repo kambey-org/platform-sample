@@ -1,8 +1,8 @@
 variable "nodes" {
   type = map(object({
-    role      = string
+    role   = string
     memory = number
-    cpus      = number
+    cpus   = number
   }))
 }
 variable "tsig_secret" {

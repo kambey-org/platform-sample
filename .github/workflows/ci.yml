@@ -65,7 +65,7 @@ jobs:
       image: pipelinecomponents/ansible-lint:latest
     steps:
       - uses: actions/checkout@v4
-      - run: ansible-lint
+      - run: ansible-lint -f pep8
         working-directory: ansible
       - run: ansible-playbook --syntax-check k8s-pre.yaml
         working-directory: ansible

@@ -21,7 +21,7 @@ jobs:
     needs: packer-validate
     runs-on: self-hosted
     environment: dev
-    if: github.ref == 'refs/heads/main' && inputs.packer == 'true'
+    if: github.ref == 'refs/heads/main' && inputs.packer == true
     steps:
       - uses: actions/checkout@v4
       - run: packer build .
@@ -46,10 +46,10 @@ jobs:
           retention-days: 1
 
   tofu-deploy:
-    needs: tofu-plan
+    needs: [tofu-plan, packer-deploy]
     runs-on: self-hosted
     environment: dev
-    if: github.ref == 'refs/heads/main'  && inputs.tofu == true
+    if: ${{ always() && inputs.tofu && needs.packer-deploy.result != 'failure' && needs.packer-deploy.result != 'cancelled' && github.ref == 'refs/heads/main' }}
     steps:
       - uses: actions/checkout@v4
       - run: tofu init
@@ -74,10 +74,10 @@ jobs:
       - run: ansible-playbook --syntax-check k8s-post.yaml
         working-directory: ansible
   ansible-deploy:
-    needs: ansible-validate
+    needs: [ansible-validate, tofu-deploy]
     runs-on: self-hosted
     environment: dev
-    if: github.ref == 'refs/heads/main' && inputs.ansible == 'true'
+    if: ${{ always() && inputs.ansible && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') && github.ref == 'refs/heads/main' }}
     steps:
       - uses: actions/checkout@v4
       - run: ansible-playbook -i inventory.yml k8s-post.yaml

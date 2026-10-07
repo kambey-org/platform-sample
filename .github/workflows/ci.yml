@@ -24,7 +24,7 @@ jobs:
     if: github.ref == 'refs/heads/main' && inputs.packer == true
     steps:
       - uses: actions/checkout@v4
-      - run: packer build . -force
+      - run: packer build -force .
         working-directory: packer
 
   tofu-plan:                   

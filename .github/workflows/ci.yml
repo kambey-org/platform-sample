@@ -60,7 +60,7 @@ jobs:
         working-directory: terraform
 
   ansible-validate:                
-    runs-on: ubuntu-latest
+    runs-on: pipelinecomponents/ansible-lint
     steps:
       - uses: actions/checkout@v4
       - run: ansible-lint

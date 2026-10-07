@@ -1,12 +1,14 @@
 name: CI
 
 on:
-  push:
-    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
   workflow_dispatch:
+    inputs:
+      packer:  { type: boolean, default: false }
+      tofu:    { type: boolean, default: false }
+      ansible: { type: boolean, default: false }
 
 jobs:
   packer-validate:                     
@@ -19,7 +21,7 @@ jobs:
     needs: packer-validate
     runs-on: self-hosted
     environment: dev
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && needs.changes.outputs.packer == 'true'
     steps:
       - uses: actions/checkout@v4
       - run: packer build .
@@ -35,7 +37,7 @@ jobs:
         working-directory: terraform
       - run: tofu validate
         working-directory: terraform
-      - run: tofu plan
+      - run: tofu plan -out=tfplan
         working-directory: terraform
       - uses: actions/upload-artifact@v4
         with:
@@ -47,7 +49,7 @@ jobs:
     needs: tofu-plan
     runs-on: self-hosted
     environment: dev
-    if: github.ref == 'refs/heads/main' 
+    if: github.ref == 'refs/heads/main'  && needs.changes.outputs.tofu == 'true'
     steps:
       - uses: actions/checkout@v4
       - run: tofu init
@@ -75,7 +77,7 @@ jobs:
     needs: ansible-validate
     runs-on: self-hosted
     environment: dev
-    if: github.ref == 'refs/heads/main' 
+    if: github.ref == 'refs/heads/main' && needs.changes.outputs.ansible == 'true'
     steps:
       - uses: actions/checkout@v4
       - run: ansible-playbook -i inventory.yml k8s-post.yaml

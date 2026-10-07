@@ -1,5 +1,6 @@
 ---
-- hosts: all
+- name: Kubernetes Post-Installation
+  hosts: all
   become: yes
   tasks:
     - name: Map old and new hostname to 127.0.1.1
@@ -18,7 +19,8 @@
         regexp: '^127\.0\.1\.1'
         line: "127.0.1.1 {{ inventory_hostname }}"
 
-- hosts: master
+- name: Kubernetes worker Post-Installation
+  hosts: master
   become: yes
   tasks:
     - name: Initialize Kubernetes master
@@ -56,7 +58,8 @@
       ansible.builtin.set_fact:
         kubeadm_join_command: "{{ kubeadm_join.stdout }}"
 
-- hosts: workers
+- name: Kubernetes worker Post-Installation
+  hosts: workers
   become: yes
   tasks:
     - name: Join worker to Kubernetes

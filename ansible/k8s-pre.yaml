@@ -1,5 +1,6 @@
 ---
-- hosts: all
+- name: Kubernetes Pre-Installation
+  hosts: all
   become: yes
   tasks:
 

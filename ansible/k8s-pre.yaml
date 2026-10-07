@@ -25,6 +25,7 @@
     - name: Drop-in to generate SSH host keys at boot
       ansible.builtin.copy:
         dest: /etc/systemd/system/ssh.service.d/hostkeys.conf
+        mode: "0644"
         content: |
           [Service]
           ExecStartPre=
@@ -45,7 +46,7 @@
         content: "ansible ALL=(ALL) NOPASSWD:ALL\n"
         mode: '0440'
         validate: 'visudo -cf %s'
-      
+
     - name: Install QEMU Guest Agent
       ansible.builtin.apt:
         name: qemu-guest-agent
@@ -55,9 +56,9 @@
       ansible.builtin.systemd:
         name: qemu-guest-agent
         enabled: true
-        
+
     - name: Enable and start serial-getty
-      systemd:
+      ansible.builtin.systemd:
         name: serial-getty@ttyS0.service
         enabled: true
         state: started
@@ -71,7 +72,7 @@
         mode: '0755'
 
     - name: Load required kernel modules
-      modprobe:
+      community.general.modprobe:
         name: "{{ item }}"
         state: present
       loop:
@@ -79,14 +80,15 @@
         - br_netfilter
 
     - name: Persist kernel modules across reboots
-      copy:
+      ansible.builtin.copy:
+        mode: "0644"
         dest: /etc/modules-load.d/k8s.conf
         content: |
           overlay
           br_netfilter
 
     - name: Set required sysctl params for Kubernetes
-      sysctl:
+      ansible.posix.sysctl:
         name: "{{ item.name }}"
         value: "{{ item.value }}"
         sysctl_set: true
@@ -97,11 +99,12 @@
         - { name: "net.ipv4.ip_forward", value: "1" }
         - { name: "net.bridge.bridge-nf-call-iptables", value: "1" }
         - { name: "net.bridge.bridge-nf-call-ip6tables", value: "1" }
-            
+
     - name: Disable swap immediately
       ansible.builtin.command:
         cmd: swapoff -a
       when: ansible_swaptotal_mb > 0
+      changed_when: true
 
     - name: Disable swap permanently
       ansible.builtin.replace:
@@ -137,20 +140,21 @@
         deb: "/tmp/containerd.deb"
 
     - name: Configure containerd for Kubernetes
-      template:
+      ansible.builtin.template:
         src: config.toml
         dest: /etc/containerd/config.toml
+        mode: "0644"
       notify: Restart containerd
 
     - name: Enable and start containerd
-      systemd:
+      ansible.builtin.systemd:
         name: containerd
         enabled: true
         state: started
         daemon_reload: true
 
     - name: Install kubeadm, kubelet, and kubectl
-      apt:
+      ansible.builtin.apt:
         name: "{{ item }}"
         state: present
       loop:
@@ -173,7 +177,8 @@
       changed_when: true
 
     - name: Reset machine-id (regenerated on first boot)
-      ansible.builtin.shell: truncate -s 0 /etc/machine-id
+      ansible.builtin.command:
+        cmd: truncate -s 0 /etc/machine-id
       changed_when: true
 
     - name: Clean apt cache
@@ -190,13 +195,14 @@
   handlers:
     - name: Update GRUB
       ansible.builtin.command: update-grub
+      changed_when: true
 
     - name: Reload systemd
-      ansible.builtin.systemd: 
+      ansible.builtin.systemd:
         daemon_reload: true
 
     - name: Restart containerd
-      systemd:
+      ansible.builtin.systemd:
         name: containerd
         state: restarted
         enabled: true

@@ -24,9 +24,11 @@
   become: true
   tasks:
     - name: Initialize Kubernetes master
-      command: kubeadm init --pod-network-cidr=10.48.0.0/16
+      ansible.builtin.command:
+        cmd: kubeadm init --pod-network-cidr=10.48.0.0/16
       register: kubeadm_output
       ignore_errors: true
+      changed_when: true
 
     - name: Create kubeconfig directory
       ansible.builtin.file:
@@ -44,9 +46,12 @@
         owner: "{{ ansible_user_uid }}"
         group: "{{ ansible_user_gid }}"
         mode: "0600"
+      changed_when: true
 
     - name: Install Calico network plugin
-      command: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+      ansible.builtin.command:
+        cmd: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+      changed_when: true
 
     - name: Create kubeadm join command
       ansible.builtin.command:

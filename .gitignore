@@ -21,3 +21,10 @@ terraform/hosts.snippet
 terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
 packer/output/debian-k8s-base/debian-k8s-base.qcow2
+bootstrap/terraform/.terraform/providers/registry.opentofu.org/hashicorp/aws/6.67.0/linux_amd64.lock
+bootstrap/terraform/.terraform/providers/registry.opentofu.org/hashicorp/aws/6.67.0/linux_amd64/CHANGELOG.md
+bootstrap/terraform/.terraform/providers/registry.opentofu.org/hashicorp/aws/6.67.0/linux_amd64/LICENSE
+bootstrap/terraform/.terraform/providers/registry.opentofu.org/hashicorp/aws/6.67.0/linux_amd64/README.md
+bootstrap/terraform/.terraform/providers/registry.opentofu.org/hashicorp/aws/6.67.0/linux_amd64/terraform-provider-aws
+bootstrap/terraform/terraform.tfstate
+.gitignore

@@ -28,3 +28,4 @@ bootstrap/terraform/.terraform/providers/registry.opentofu.org/hashicorp/aws/6.6
 bootstrap/terraform/.terraform/providers/registry.opentofu.org/hashicorp/aws/6.67.0/linux_amd64/terraform-provider-aws
 bootstrap/terraform/terraform.tfstate
 .gitignore
+bootstrap/terraform/terraform.tfstate.backup

@@ -6,7 +6,7 @@ resource "dns_a_record_set" "node" {
   ttl       = 60
 }
 resource "libvirt_volume" "node_disk" {
-  for_each = var.nodes
+  for_each = local.nodes
 
   name     = "${each.key}.qcow2"
   pool     = libvirt_pool.k8s_pool.name
@@ -80,7 +80,7 @@ resource "libvirt_network" "k8s_net" {
   ]
 }
 resource "libvirt_domain" "node" {
-  for_each    = var.nodes
+  for_each    = local.nodes
   name        = each.key
   type        = "kvm"
   memory      = each.value.memory

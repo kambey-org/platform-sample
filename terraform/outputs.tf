@@ -1,5 +1,5 @@
 data "libvirt_domain_interface_addresses" "node" {
-  for_each = var.nodes
+  for_each = local.nodes
   domain   = libvirt_domain.node[each.key].name
   source   = "agent"
 }

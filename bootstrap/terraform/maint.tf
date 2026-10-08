@@ -77,7 +77,7 @@ data "aws_iam_policy_document" "trust" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:kambey-org/platform-sample:ref:refs/heads/main"]   # tylko gałąź main
+      values   = ["repo:kambey-org/platform-sample:ref:refs/heads/main", "repo:kambey-org@338612941/platform-sample@1381344038:environment:dev"]   # tylko gałąź main
     }
   }
 }
@@ -97,7 +97,6 @@ data "aws_iam_policy_document" "state_access" {
     resources = ["${aws_s3_bucket.state.arn}/k8s-lab/*"]
   }
 }
-
 resource "aws_iam_role_policy" "state_access" {
   role   = aws_iam_role.pipeline.id
   policy = data.aws_iam_policy_document.state_access.json

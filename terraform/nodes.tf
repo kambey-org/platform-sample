@@ -1,5 +1,5 @@
 locals {
-  inventory = yamldecode(file("${path.module}/../ansible/inventory.yml"))
+  inventory = yamldecode(file("${path.module}/../ansible/inventory.yaml"))
 
   # {nazwa = {cpus, memory, role}}, a rolą jest nazwa grupy (master/workers)
   nodes = merge([

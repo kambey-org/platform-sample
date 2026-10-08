@@ -51,6 +51,12 @@ jobs:
     if: ${{ always() && inputs.tofu && needs.packer-deploy.result != 'failure' && needs.packer-deploy.result != 'cancelled' && github.ref == 'refs/heads/main' }}
     steps:
       - uses: actions/checkout@v4
+      - name: Debug GitHub context
+        run: |
+          echo "GITHUB_REPOSITORY=$GITHUB_REPOSITORY"
+          echo "GITHUB_REF=$GITHUB_REF"
+          echo "GITHUB_EVENT_NAME=$GITHUB_EVENT_NAME"
+          echo "GITHUB_WORKFLOW_REF=$GITHUB_WORKFLOW_REF"
       - uses: aws-actions/configure-aws-credentials@v4     # przypnij do SHA
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}          # Settings → Variables → Actions

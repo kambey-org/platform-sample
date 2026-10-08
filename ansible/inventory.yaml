@@ -1,0 +1,17 @@
+all:
+  vars:
+    ansible_user: ansible
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+  children:
+    master:
+      hosts:
+        k8s-master-1:
+          ansible_host: k8s-master-1.lab.internal
+          cpus: 2
+          memory: 4096
+    workers:
+      hosts:
+        k8s-worker-1:
+          ansible_host: k8s-worker-1.lab.internal
+          cpus: 2
+          memory: 4096

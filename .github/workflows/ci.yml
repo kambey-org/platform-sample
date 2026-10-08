@@ -1,6 +1,9 @@
 name: CI
-
+permissions:
+  id-token: write
+  contents: read
 on:
+  
   pull_request:
     branches: [ "main" ]
 
@@ -52,6 +55,10 @@ jobs:
     if: ${{ always() && inputs.tofu && needs.packer-deploy.result != 'failure' && needs.packer-deploy.result != 'cancelled' && github.ref == 'refs/heads/main' }}
     steps:
       - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4     # przypnij do SHA
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}          # Settings → Variables → Actions
+          aws-region: eu-central-1
       - run: tofu init
         working-directory: terraform
       - uses: actions/download-artifact@v4

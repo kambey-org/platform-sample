@@ -55,6 +55,7 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}          # Settings → Variables → Actions
           aws-region: eu-central-1
+          audience: sts.amazonaws.com
       - run: tofu init
         working-directory: terraform
       - uses: actions/download-artifact@v4

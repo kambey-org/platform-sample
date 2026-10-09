@@ -32,6 +32,11 @@ jobs:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4     # przypnij do SHA
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}          # Settings → Variables → Actions
+          aws-region: eu-central-1
+          audience: sts.amazonaws.com
       - run: tofu init
         working-directory: terraform
       - run: tofu fmt -check

@@ -77,7 +77,7 @@ data "aws_iam_policy_document" "trust" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:kambey-org/platform-sample:ref:refs/heads/main", "repo:kambey-org@338612941/platform-sample@1381344038:environment:dev"]   # tylko gałąź main
+      values   = ["repo:kambey-org@338612941/platform-sample@1381344038:environment:prod"]   
     }
   }
 }
@@ -93,7 +93,7 @@ data "aws_iam_policy_document" "state_access" {
     resources = [aws_s3_bucket.state.arn]
   }
   statement {
-    actions   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]   # Delete: plik blokady .tflock
+    actions   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]  
     resources = ["${aws_s3_bucket.state.arn}/k8s-lab/*"]
   }
 }
@@ -102,3 +102,42 @@ resource "aws_iam_role_policy" "state_access" {
   policy = data.aws_iam_policy_document.state_access.json
 }
 
+data "aws_iam_policy_document" "trust_pr" {
+  statement {
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+    principals {
+      type        = "Federated"
+      identifiers = [aws_iam_openid_connect_provider.github.arn]
+    }
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+    condition {
+      test     = "StringLike"
+      variable = "token.actions.githubusercontent.com:sub"
+      values   = ["repo:kambey-org@338612941/platform-sample@1381344038:environment:dev"]  
+    }
+  }
+}
+
+resource "aws_iam_role" "pull_request" {
+  name               = "github-k8s-lab-state-readonly"
+  assume_role_policy = data.aws_iam_policy_document.trust_pr.json
+}
+
+data "aws_iam_policy_document" "state_readonly" {
+  statement {
+    actions   = ["s3:ListBucket"]
+    resources = [aws_s3_bucket.state.arn]
+  }
+  statement {
+    actions   = ["s3:GetObject"]   
+    resources = ["${aws_s3_bucket.state.arn}/k8s-lab/*"]
+  }
+}
+resource "aws_iam_role_policy" "state_readonly" {
+  role   = aws_iam_role.pull_request.id
+  policy = data.aws_iam_policy_document.state_readonly.json
+}

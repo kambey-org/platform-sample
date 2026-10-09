@@ -15,3 +15,7 @@ all:
           ansible_host: k8s-worker-1.lab.internal
           cpus: 2
           memory: 4096
+        k8s-worker-2:
+          ansible_host: k8s-worker-2.lab.internal
+          cpus: 2
+          memory: 2048

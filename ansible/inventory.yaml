@@ -8,7 +8,7 @@ all:
         k8s-master-1:
           ansible_host: k8s-master-1.lab.internal
           cpus: 2
-          memory: 4096
+          memory: 2048
     workers:
       hosts:
         k8s-worker-1:

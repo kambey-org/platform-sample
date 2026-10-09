@@ -64,9 +64,9 @@
         name: "{{ item }}"
         state: present
       loop:
-        - kubeadm
-        - kubelet
-        - kubectl
+        - "kubeadm=1.37.0-1.1"
+        - "kubelet=1.37.0-1.1"
+        - "kubectl=1.37.0-1.1"
 
 - name: Kubernetes master Post-Installation
   hosts: master

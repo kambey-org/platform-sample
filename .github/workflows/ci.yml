@@ -92,5 +92,5 @@ jobs:
     if: ${{ always() && inputs.ansible && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') && github.ref == 'refs/heads/main' }}
     steps:
       - uses: actions/checkout@v4
-      - run: ansible-playbook -i inventory.yaml k8s-post.yaml
+      - run: ansible-playbook -i ../inventory.yaml k8s-post.yaml
         working-directory: ansible

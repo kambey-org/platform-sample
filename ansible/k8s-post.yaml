@@ -7,7 +7,7 @@
       ansible.builtin.lineinfile:
         path: /etc/hosts
         regexp: '^127\.0\.1\.1'
-        line: "127.0.1.1 {{ inventory_hostname }} {{ ansible_hostname }}"
+        line: "127.0.1.1 {{ inventory_hostname }} {{ ansible_facts['hostname'] }}"
 
     - name: Set hostname from inventory
       ansible.builtin.hostname:
@@ -81,8 +81,8 @@
       ansible.builtin.file:
         path: "{{ ansible_env.HOME }}/.kube"
         state: directory
-        owner: "{{ ansible_user_uid }}"
-        group: "{{ ansible_user_gid }}"
+        owner: "{{ ansible_facts['user_uid'] }}"
+        group: "{{ ansible_facts['user_gid'] }}"
         mode: "0700"
 
     - name: Copy admin kubeconfig
@@ -90,8 +90,8 @@
         src: /etc/kubernetes/admin.conf
         dest: "{{ ansible_env.HOME }}/.kube/config"
         remote_src: true
-        owner: "{{ ansible_user_uid }}"
-        group: "{{ ansible_user_gid }}"
+        owner: "{{ ansible_facts['user_uid'] }}"
+        group: "{{ ansible_facts['user_gid'] }}"
         mode: "0600"
       changed_when: true
 

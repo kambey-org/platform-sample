@@ -1,5 +1,5 @@
 locals {
-  inventory = yamldecode(file("${path.module}/../ansible/inventory.yaml"))
+  inventory = yamldecode(file("${path.module}/../inventory.yaml"))
 
   nodes = merge([
     for group, g in local.inventory.all.children : {

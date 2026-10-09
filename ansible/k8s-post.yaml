@@ -21,14 +21,14 @@
     - name: Download Kubernetes repository signing key
       become: true
       ansible.builtin.get_url:
-        url: https://pkgs.k8s.io/core:/stable:/v1.36/deb/Release.key
+        url: https://pkgs.k8s.io/core:/stable:/v1.37/deb/Release.key
         dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
         mode: '0644'
 
     - name: Add Kubernetes repository
       become: true
       ansible.builtin.apt_repository:
-        repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v1.36/deb/ /"
+        repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v1.37/deb/ /"
         filename: kubernetes
         state: present
         update_cache: true

@@ -21,7 +21,7 @@ jobs:
   packer-deploy:
     needs: packer-validate
     runs-on: self-hosted
-    environment: dev
+    environment: prod
     if: github.ref == 'refs/heads/main' && inputs.packer == true
     steps:
       - uses: actions/checkout@v4
@@ -30,15 +30,21 @@ jobs:
 
   tofu-plan:                   
     runs-on: self-hosted
+    environment: dev
     steps:
       - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4    
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}         
+          aws-region: eu-central-1
+          audience: sts.amazonaws.com
       - run: tofu init
         working-directory: terraform
       - run: tofu fmt -check
         working-directory: terraform
       - run: tofu validate
         working-directory: terraform
-      - run: tofu plan -out=tfplan
+      - run: tofu plan -out=tfplan -lock=false
         working-directory: terraform
       - uses: actions/upload-artifact@v4
         with:
@@ -49,7 +55,7 @@ jobs:
   tofu-deploy:
     needs: [tofu-plan, packer-deploy]
     runs-on: self-hosted
-    environment: dev
+    environment: prod
     if: ${{ always() && inputs.tofu && needs.packer-deploy.result != 'failure' && needs.packer-deploy.result != 'cancelled' && github.ref == 'refs/heads/main' }}
     steps:
       - uses: actions/checkout@v4
@@ -82,7 +88,7 @@ jobs:
   ansible-deploy:
     needs: [ansible-validate, tofu-deploy]
     runs-on: self-hosted
-    environment: dev
+    environment: prod
     if: ${{ always() && inputs.ansible && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') && github.ref == 'refs/heads/main' }}
     steps:
       - uses: actions/checkout@v4

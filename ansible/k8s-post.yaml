@@ -18,8 +18,57 @@
         path: /etc/hosts
         regexp: '^127\.0\.1\.1'
         line: "127.0.1.1 {{ inventory_hostname }}"
+    - name: Download Kubernetes repository signing key
+      become: true
+      ansible.builtin.get_url:
+        url: https://pkgs.k8s.io/core:/stable:/v1.36/deb/Release.key
+        dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
+        mode: '0644'
 
-- name: Kubernetes worker Post-Installation
+    - name: Add Kubernetes repository
+      become: true
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v1.36/deb/ /"
+        filename: kubernetes
+        state: present
+        update_cache: true
+
+    - name: Download containerd package
+      become: true
+      ansible.builtin.get_url:
+        url: "https://download.docker.com/linux/debian/dists/bookworm/pool/stable/amd64/containerd.io_2.3.5-1~debian.12~bookworm_amd64.deb"
+        dest: "/tmp/containerd.deb"
+        mode: '0644'
+
+    - name: Install containerd package
+      become: true
+      ansible.builtin.apt:
+        deb: "/tmp/containerd.deb"
+
+    - name: Configure containerd for Kubernetes
+      ansible.builtin.template:
+        src: config.toml
+        dest: /etc/containerd/config.toml
+        mode: "0644"
+      notify: Restart containerd
+
+    - name: Enable and start containerd
+      ansible.builtin.systemd:
+        name: containerd
+        enabled: true
+        state: started
+        daemon_reload: true
+
+    - name: Install kubeadm, kubelet, and kubectl
+      ansible.builtin.apt:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - kubeadm
+        - kubelet
+        - kubectl
+
+- name: Kubernetes master Post-Installation
   hosts: master
   become: true
   tasks:

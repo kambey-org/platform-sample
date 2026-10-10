@@ -38,8 +38,14 @@ jobs:
 
   tofu-validate:                   
     runs-on: ubuntu-latest
+    environment: dev
     steps:
       - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4    
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}         
+          aws-region: eu-central-1
+          audience: sts.amazonaws.com
       - name: Setup OpenTofu
         uses: opentofu/setup-opentofu@v1
         with:

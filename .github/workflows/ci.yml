@@ -1,11 +1,12 @@
 name: CI
 
 on:
+  release:
+    types: [published]
   pull_request:
     branches: [ "main" ]
   workflow_dispatch:
     inputs:
-      packer:  { type: boolean, default: false }
       tofu:    { type: boolean, default: false }
       ansible: { type: boolean, default: false }
 permissions:
@@ -28,7 +29,7 @@ jobs:
     environment: prod
     env:
       PKR_VAR_IMAGE_TAG: ${{ github.event.release.tag_name  }}  
-    if: github.event_name  == 'release' && inputs.packer == true
+    if: github.event_name  == 'release'
     steps:
       - uses: actions/checkout@v4
       - run: packer build -force .

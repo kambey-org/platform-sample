@@ -4,4 +4,5 @@ variable "tsig_secret" {
 }
 variable "IMAGE_TAG" {
   type      = string
+  default   = "current"
 }

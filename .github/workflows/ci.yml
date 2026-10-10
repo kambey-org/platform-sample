@@ -37,7 +37,7 @@ jobs:
       - run: cp /var/lib/lab/images/${{ github.event.release.tag_name  }}/debian-k8s-base.qcow2 ansible/images/current/debian-k8s-base.qcow2
 
   tofu-validate:                   
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     environment: dev
     steps:
       - uses: actions/checkout@v4

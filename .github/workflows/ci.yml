@@ -24,7 +24,7 @@ jobs:
         working-directory: packer
 
   packer-deploy:
-    needs: packer-validate
+    needs: [packer-validate, ansible-validate]
     runs-on: self-hosted
     environment: prod
     env:

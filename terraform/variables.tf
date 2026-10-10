@@ -3,6 +3,6 @@ variable "tsig_secret" {
   sensitive = true
 }
 variable "IMAGE_TAG" {
-  type      = string
-  default   = "current"
+  type    = string
+  default = "current"
 }

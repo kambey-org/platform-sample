@@ -37,20 +37,14 @@ jobs:
       - run: cp /var/lib/lab/images/${{ github.event.release.tag_name  }}/debian-k8s-base.qcow2 ansible/images/current/debian-k8s-base.qcow2
 
   tofu-validate:                   
-    runs-on: self-hosted
-    environment: dev
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: aws-actions/configure-aws-credentials@v4    
-        with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}         
-          aws-region: eu-central-1
-          audience: sts.amazonaws.com
       - name: Setup OpenTofu
         uses: opentofu/setup-opentofu@v1
         with:
           tofu_version: latest
-      - run: tofu init
+      - run: tofu init -backend=false
         working-directory: terraform
       - run: tofu fmt -check
         working-directory: terraform

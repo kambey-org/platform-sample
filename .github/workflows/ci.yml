@@ -52,7 +52,7 @@ jobs:
 
   tofu-plan:                   
     runs-on: self-hosted
-    needs: [tofu-validate]
+    needs: [tofu-validate, packer-deploy]
     if: ${{ always() && inputs.tofu && needs.packer-deploy.result != 'failure' && needs.packer-deploy.result != 'cancelled' && github.event_name  == 'release' }}
     environment: dev
     steps:

@@ -36,8 +36,25 @@ jobs:
         working-directory: packer
       - run: cp /var/lib/lab/images/${{ github.event.release.tag_name  }}/debian-k8s-base.qcow2 ansible/images/current/debian-k8s-base.qcow2
 
+  tofu-validate:                   
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup OpenTofu
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: latest
+      - run: tofu init -backend=false
+        working-directory: terraform
+      - run: tofu fmt -check
+        working-directory: terraform
+      - run: tofu validate
+        working-directory: terraform
+
   tofu-plan:                   
     runs-on: self-hosted
+    needs: [tofu-validate]
+    if: ${{ always() && inputs.tofu && needs.packer-deploy.result != 'failure' && needs.packer-deploy.result != 'cancelled' && github.event_name  == 'release' }}
     environment: dev
     steps:
       - uses: actions/checkout@v4
@@ -47,10 +64,6 @@ jobs:
           aws-region: eu-central-1
           audience: sts.amazonaws.com
       - run: tofu init
-        working-directory: terraform
-      - run: tofu fmt -check
-        working-directory: terraform
-      - run: tofu validate
         working-directory: terraform
       - run: tofu plan -out=tfplan -lock=false
         working-directory: terraform
@@ -64,12 +77,14 @@ jobs:
     needs: [tofu-plan, packer-deploy]
     runs-on: self-hosted
     environment: prod
-    if: ${{ always() && inputs.tofu && needs.packer-deploy.result != 'failure' && needs.packer-deploy.result != 'cancelled' && github.ref == 'refs/heads/main' }}
+    if: github.event_name  == 'release'
+    env:
+      TF_VAR_IMAGE_TAG: ${{ github.event.release.tag_name  }}  
     steps:
       - uses: actions/checkout@v4
-      - uses: aws-actions/configure-aws-credentials@v4     # przypnij do SHA
+      - uses: aws-actions/configure-aws-credentials@v4    
         with:
-          role-to-assume: ${{ vars.AWS_ROLE_ARN }}          # Settings → Variables → Actions
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}          
           aws-region: eu-central-1
           audience: sts.amazonaws.com
       - run: tofu init

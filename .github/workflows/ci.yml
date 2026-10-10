@@ -80,9 +80,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: ansible-lint -f pep8
+        working-directory: packer
+      - run: ansible-lint -f pep8
         working-directory: ansible
       - run: ansible-playbook --syntax-check k8s-pre.yaml
-        working-directory: ansible
+        working-directory: packer
       - run: ansible-playbook --syntax-check k8s-post.yaml
         working-directory: ansible
   ansible-deploy:
@@ -92,5 +94,5 @@ jobs:
     if: ${{ always() && inputs.ansible && !contains(needs.*.result, 'failure') && !contains(needs.*.result, 'cancelled') && github.ref == 'refs/heads/main' }}
     steps:
       - uses: actions/checkout@v4
-      - run: ansible-playbook -i inventory.yaml k8s-post.yaml
+      - run: ansible-playbook -i ../inventory.yaml k8s-post.yaml
         working-directory: ansible

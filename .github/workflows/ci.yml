@@ -11,6 +11,9 @@ on:
 permissions:
   id-token: write
   contents: read
+
+env:
+  IMAGE_TAG: ${{ github.event.release.tag_name  }}  
 jobs:
   packer-validate:                     
     runs-on: ubuntu-latest
@@ -18,15 +21,19 @@ jobs:
       - uses: actions/checkout@v4
       - run: packer validate -syntax-only .
         working-directory: packer
+
   packer-deploy:
     needs: packer-validate
     runs-on: self-hosted
     environment: prod
-    if: github.ref == 'refs/heads/main' && inputs.packer == true
+    env:
+      PKR_VAR_IMAGE_TAG: ${{ github.event.release.tag_name  }}  
+    if: github.event_name  == 'release' && inputs.packer == true
     steps:
       - uses: actions/checkout@v4
       - run: packer build -force .
         working-directory: packer
+      - run: cp /var/lib/lab/images/${{ github.event.release.tag_name  }}/debian-k8s-base.qcow2 ansible/images/current/debian-k8s-base.qcow2
 
   tofu-plan:                   
     runs-on: self-hosted

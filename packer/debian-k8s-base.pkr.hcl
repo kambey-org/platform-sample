@@ -39,7 +39,7 @@ build {
 
   provisioner "ansible" {
     user          = "ansible"
-    playbook_file = "../k8s-pre.yaml"
+    playbook_file = "k8s-pre.yaml"
     extra_arguments = [
       "--become",
       "--extra-vars",

@@ -39,7 +39,7 @@ resource "libvirt_volume" "base_image" {
   }
   create = {
     content = {
-      url = "/var/lib/lab/images/current/debian-k8s-base.qcow2"
+      url = "/var/lib/lab/images/${ var.IMAGE_TAG }/debian-k8s-base.qcow2"
     }
   }
 }

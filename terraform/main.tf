@@ -151,6 +151,10 @@ resource "libvirt_domain" "node" {
         model = {
           type = "virtio"
         }
+        mac = {
+          address = local.nodes[each.key].mac
+        }
+
         wait_for_ip = {
           source  = "lease"
           network = "192.168.0.1/24"

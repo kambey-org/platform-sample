@@ -7,6 +7,8 @@ locals {
         cpus   = h.cpus
         memory = h.memory
         role   = group
+        ip     = h.ip
+        mac    = h.mac
       }
     }
   ]...)

@@ -68,6 +68,13 @@ resource "libvirt_network" "k8s_net" {
       address = "192.168.0.1"
       prefix  = 24
 
+      hosts = [
+        for name, node in local.nodes : {
+          name = name
+          mac  = node.mac
+          ip   = node.ip
+        }
+      ]
       dhcp = {
         ranges = [
           {

@@ -25,6 +25,14 @@
         dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
         mode: '0644'
 
+    - name: Install nfs-common package
+      become: true
+      ansible.builtin.apt:
+        name:
+          - nfs-common
+        state: present
+        update_cache: true
+
     - name: Add Kubernetes repository
       become: true
       ansible.builtin.apt_repository:
@@ -127,3 +135,26 @@
         cmd: "{{ hostvars[groups['master'][0]]['kubeadm_join_command'] }}"
         creates: /etc/kubernetes/kubelet.conf
       register: join_result
+
+- name: Kubernetes master Post-join actions
+  hosts: master
+  become: true
+  tasks:
+
+    - name: Approve serving CSRs for workers
+      ansible.builtin.shell: |
+        for node in {{ groups['kube_workers'] | map('quote') | join(' ') }}; do
+          kubectl get csr -o json |
+            jq -r --arg node "system:node:$node" '
+              .items[]
+              | select(.spec.signerName == "kubernetes.io/kubelet-serving")
+              | select(.spec.username == $node)
+              | select(([.status.conditions[]?.type] | index("Approved")) == null)
+              | select(([.status.conditions[]?.type] | index("Denied")) == null)
+              | .metadata.name
+            ' |
+            xargs -r kubectl certificate approve
+        done
+      environment:
+        KUBECONFIG: /etc/kubernetes/admin.conf
+      changed_when: false

@@ -25,6 +25,14 @@
         dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
         mode: '0644'
 
+    - name: Install nfs-common package
+      become: true
+      ansible.builtin.apt:
+        name:
+          - nfs-common
+        state: present
+        update_cache: true
+
     - name: Add Kubernetes repository
       become: true
       ansible.builtin.apt_repository:

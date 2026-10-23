@@ -7,15 +7,15 @@ all:
       hosts:
         k8s-master-1:
           ansible_host: k8s-master-1.lab.internal
-          cpus: 2
-          memory: 3072
+          cpus: 4
+          memory: 4096
           ip: 192.168.0.21
           mac: "52:54:00:bb:77:13"
     workers:
       hosts:
         k8s-worker-1:
           ansible_host: k8s-worker-1.lab.internal
-          cpus: 2
+          cpus: 4
           memory: 4096
           ip: 192.168.0.31
           mac: "52:54:00:84:36:3e"

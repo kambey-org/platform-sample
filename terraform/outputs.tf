@@ -6,7 +6,7 @@ data "libvirt_domain_interface_addresses" "node" {
 locals {
   node_ips = {
     for name, iface in data.libvirt_domain_interface_addresses.node :
-    name => iface.interfaces[1].addrs[0].addr
+    name => iface.interfaces[0].addrs[0].addr
   }
 }
 output "node_ips" {

@@ -1,0 +1,1 @@
+workers_instance_types = ["m7i-flex.large"]

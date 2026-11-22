@@ -77,7 +77,7 @@ data "aws_iam_policy_document" "trust" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:kambey-org@338612941/platform-sample@1381344038:environment:prod"]   
+      values   = ["repo:kambey-org@338612941/platform-sample@1381344038:environment:prod"]
     }
   }
 }
@@ -93,7 +93,7 @@ data "aws_iam_policy_document" "state_access" {
     resources = [aws_s3_bucket.state.arn]
   }
   statement {
-    actions   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]  
+    actions   = ["s3:GetObject", "s3:PutObject", "s3:DeleteObject"]
     resources = ["${aws_s3_bucket.state.arn}/k8s-lab/*"]
   }
 }
@@ -117,7 +117,7 @@ data "aws_iam_policy_document" "trust_pr" {
     condition {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
-      values   = ["repo:kambey-org@338612941/platform-sample@1381344038:environment:dev"]  
+      values   = ["repo:kambey-org@338612941/platform-sample@1381344038:environment:dev"]
     }
   }
 }
@@ -133,7 +133,7 @@ data "aws_iam_policy_document" "state_readonly" {
     resources = [aws_s3_bucket.state.arn]
   }
   statement {
-    actions   = ["s3:GetObject"]   
+    actions   = ["s3:GetObject"]
     resources = ["${aws_s3_bucket.state.arn}/k8s-lab/*"]
   }
 }

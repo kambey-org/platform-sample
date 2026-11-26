@@ -1,3 +1,5 @@
-output "bucket"   { value = aws_s3_bucket.state.id }
+output "bucket" { value = aws_s3_bucket.state.id }
 output "role_arn" { value = aws_iam_role.pipeline.arn }
+output "vpc_tofu_plan_arn" { value = aws_iam_role.vpc_tofu_plan.arn }
+output "vpc_tofu_apply_arn" { value = aws_iam_role.vpc_tofu_apply.arn }
 output "role_readonly_arn" { value = aws_iam_role.pull_request.arn }

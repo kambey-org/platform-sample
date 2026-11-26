@@ -1,14 +1,21 @@
-name: CI
+name: On permises infrastructure
 
 on:
   release:
     types: [published]
   pull_request:
     branches: [ "main" ]
+    paths:
+      [ "terraform/lab/**", "packer/**", "ansible/**", "inventory.yaml", ".github/workflows/on-perm-infra.yml" ]
+
   workflow_dispatch:
     inputs:
       tofu:    { type: boolean, default: false }
       ansible: { type: boolean, default: false }
+  push:
+    branches: [ "main" ]
+    paths:
+      [ "terraform/lab/**", "packer/**", "ansible/**", "inventory.yaml", ".github/workflows/on-perm-infra.yml" ]
 permissions:
   id-token: write
   contents: read
@@ -47,17 +54,17 @@ jobs:
           aws-region: eu-central-1
           audience: sts.amazonaws.com
       - run: tofu init
-        working-directory: terraform
+        working-directory: terraform/lab
       - run: tofu fmt -check
-        working-directory: terraform
+        working-directory: terraform/lab
       - run: tofu validate
-        working-directory: terraform
+        working-directory: terraform/lab
       - run: tofu plan -out=tfplan -lock=false
-        working-directory: terraform
+        working-directory: terraform/lab
       - uses: actions/upload-artifact@v4
         with:
           name: tfplan
-          path: terraform/tfplan
+          path: terraform/lab/tfplan
           retention-days: 1
 
   tofu-deploy:
@@ -73,13 +80,13 @@ jobs:
           aws-region: eu-central-1
           audience: sts.amazonaws.com
       - run: tofu init
-        working-directory: terraform
+        working-directory: terraform/lab
       - uses: actions/download-artifact@v4
         with:
           name: tfplan
-          path: terraform
+          path: terraform/lab
       - run: tofu apply tfplan -auto-approve
-        working-directory: terraform
+        working-directory: terraform/lab
 
   ansible-validate:                
     runs-on: ubuntu-latest

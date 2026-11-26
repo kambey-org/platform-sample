@@ -1,0 +1,65 @@
+name: AWS infrastructure destroy
+
+on: 
+  workflow_dispatch:
+    inputs:
+      vpc-destroy: { type: string, default: "", description: "Set to destroy-vpc to destroy the VPC" }
+  
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  vpc-plan:                   
+    runs-on: ubuntu-latest
+    environment: dev
+    if: github.ref == 'refs/heads/main' && inputs.vpc-destroy == 'destroy-vpc'
+    concurrency:
+      group: vpc-destroy-plan
+      cancel-in-progress: true
+    steps:
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          version: 1.13.10
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4    
+        with:
+          role-to-assume: ${{ vars.VPC_TOFU_PLAN_ARN }}         
+          aws-region: eu-central-1
+          audience: sts.amazonaws.com
+      - run: tofu init -input=false
+        working-directory: terraform/aws/stacks/vpc
+      - run: tofu plan -destroy -out=vpc-destroy-plan -input=false  -lock-timeout=5m
+        working-directory: terraform/aws/stacks/vpc
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vpc-destroy-plan
+          path: terraform/aws/stacks/vpc/vpc-destroy-plan
+          retention-days: 1
+
+  vpc-destroy:
+    needs: [vpc-plan]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && inputs.vpc-destroy == 'destroy-vpc'
+    concurrency:
+      group: vpc-apply
+      cancel-in-progress: false
+    environment: prod
+    steps:
+      - uses: opentofu/setup-opentofu@v1
+        with:
+          version: 1.13.10
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4    
+        with:
+          role-to-assume: ${{ vars.VPC_TOFU_APPLY_ARN }}          
+          aws-region: eu-central-1
+          audience: sts.amazonaws.com
+      - run: tofu init -input=false
+        working-directory: terraform/aws/stacks/vpc
+      - uses: actions/download-artifact@v4
+        with:
+          name: vpc-destroy-plan
+          path: terraform/aws/stacks/vpc
+      - run: tofu apply vpc-destroy-plan -input=false
+        working-directory: terraform/aws/stacks/vpc
